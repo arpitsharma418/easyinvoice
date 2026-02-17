@@ -4,8 +4,6 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
-
 
 export default function Login() {
   const [loading, setLoading] = useState(false);

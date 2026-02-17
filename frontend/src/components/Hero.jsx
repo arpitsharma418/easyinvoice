@@ -10,7 +10,7 @@ export default function Hero() {
           <div className="left w-full lg:w-[50%]">
 
             <div className="mt-5 space-y-10">
-              <h1 className="text-7xl font-extrabold">
+              <h1 className="text-4xl md:text-7xl font-extrabold">
                 Create Professional Invoices in Seconds
               </h1>
               <p className="text-lg opacity-80">
