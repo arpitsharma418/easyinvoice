@@ -128,7 +128,7 @@ VITE_API_URL=http://localhost:5000
 ### 1) Clone and enter project
 ```bash
 git clone <your-repo-url>
-cd EasyInvoice.ai
+cd EasyInvoice
 ```
 
 ### 2) Install dependencies
