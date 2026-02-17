@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+body{
+    background-color: rgb(244, 244, 244);
+    /* background-color: rgb(8, 8, 15); */
+    font-family: "Roboto", sans-serif;
+    box-sizing: border-box;
+}
+
+.dm-sans{
+  font-family: "DM Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900
+}
