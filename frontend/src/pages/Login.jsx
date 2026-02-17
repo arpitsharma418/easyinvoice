@@ -4,6 +4,9 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
+
+
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -26,7 +29,7 @@ export default function Login() {
     setLoading(true);
 
     axios
-      .post("http://localhost:5000/api/auth/login", formData, {
+      .post(`${import.meta.env.VITE_API_URL}/api/auth/login`, formData, {
         withCredentials: true,
       })
       .then((res) => {
