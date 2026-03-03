@@ -45,7 +45,7 @@ export default function Register() {
         navigate("/dashboard");
       })
       .catch((err) => {
-        toast.error(err.data.message, {
+        toast.error(err.response.data.message, {
           position: "top-center",
           autoClose: 3000,
           theme: "light",

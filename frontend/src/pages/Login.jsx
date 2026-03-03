@@ -44,7 +44,8 @@ export default function Login() {
         navigate("/dashboard");
       })
       .catch((err) => {
-        toast.error(err.data.message, {
+        console.dir(err);
+        toast.error(err.response.data.message, {
           position: "top-center",
           autoClose: 3000,
           theme: "light",
