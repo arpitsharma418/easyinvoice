@@ -3,7 +3,8 @@ import {
   createInvoice,
   getAllInvoices,
   updateInvoice,
-  deleteInvoice
+  deleteInvoice,
+  downloadInvoice
 } from "../controllers/invoiceController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import validateInvoice from "../middleware/validateInvoice.js";
@@ -14,5 +15,6 @@ router.post("/", authMiddleware, validateInvoice, createInvoice);
 router.get("/", authMiddleware, getAllInvoices);
 router.put("/:id", authMiddleware, validateInvoice, updateInvoice);
 router.delete("/:id", authMiddleware, deleteInvoice);
+router.get("/:id",authMiddleware, downloadInvoice);
 
 export default router;

@@ -7,7 +7,6 @@ import Login from "./pages/Login.jsx";
 import { ToastContainer } from "react-toastify";
 import Dashboard from "./pages/Dashboard.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
-import InvoicePreview from "./components/InvoicePreview.jsx";
 
 export default function App() {
   const { user } = useAuth();
@@ -19,7 +18,6 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={user ? <Dashboard /> : <Login />} />
-        <Route path="/preview" element={<InvoicePreview/>} />
       </Routes>
     </>
   );

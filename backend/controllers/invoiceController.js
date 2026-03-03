@@ -1,4 +1,6 @@
 import Invoice from "../models/Invoice.js";
+import puppeteer from "puppeteer";
+import generateInvoiceHTML from "../utils/generatePDF.js";
 
 // Calculate Invoice
 const calculateInvoice = (items, taxRate) => {
@@ -144,3 +146,43 @@ export const deleteInvoice = async (req, res) => {
     return res.status(500).json({ message: "Server Error" });
   }
 };
+
+export const downloadInvoice = async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id);
+
+    if (!invoice) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    console.log(invoice);
+
+    const html = generateInvoiceHTML(invoice);
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true
+    });
+
+    await browser.close();
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=${invoice.invoiceNumber}.pdf`
+    });
+
+    res.send(pdf);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "PDF generation failed" });
+  }
+}

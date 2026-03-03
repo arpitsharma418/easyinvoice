@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,9 +10,9 @@ export default function Register() {
     email: "",
     password: "",
   });
+
   const { setUser } = useAuth();
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -58,78 +57,105 @@ export default function Register() {
   };
 
   return (
-    <div>
-      <div className="p-8 w-110 mt-28 mx-auto">
-        <form onSubmit={handleSubmit}>
-          <h1 className="text-center font-bold text-3xl mb-1">
-            Create Account
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="glass-card w-full max-w-md p-8 sm:p-10">
+        <div className="text-center">
+          <span className="chip">
+            New Here?
+          </span>
+          <h1 className="mt-4 text-2xl font-bold text-slate-900">
+            Create your account
           </h1>
-          <p className="text-sm opacity-60 text-center mb-5">
-            Join easyinvoice and start managing invoices
+          <p className="mt-2 text-sm text-slate-500">
+            Start creating invoices in minutes.
           </p>
+        </div>
 
-          {/* Name Field */}
-          <div className="flex flex-col">
-            <label htmlFor="name">Full Name</label>
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-black/10" />
+          <span className="text-xs uppercase tracking-wider text-slate-400">
+            Register with email
+          </span>
+          <div className="h-px flex-1 bg-black/10" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="name"
+              className="text-xs font-semibold text-slate-600"
+            >
+              Name
+            </label>
             <input
               type="text"
               id="name"
               name="name"
+              placeholder="Jane Doe"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your full name"
               required
-              className="p-2 text-sm mt-1 rounded outline-0 focus:ring-3 ring-gray-300 transition-all duration-150 border border-black/10"
+              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10"
             />
           </div>
 
-          {/* Email Field */}
-          <div className="flex flex-col mt-2">
-            <label htmlFor="email">Email Address</label>
+          <div>
+            <label
+              htmlFor="email"
+              className="text-xs font-semibold text-slate-600"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
               name="email"
+              placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
               required
-              className="p-2 text-sm mt-1  rounded outline-0 focus:ring-3 ring-gray-300 transition-all duration-150 border border-black/10"
+              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10"
             />
           </div>
 
-          {/* Password Field */}
-          <div className="flex flex-col mt-2">
-            <label htmlFor="password">Password</label>
+          <div>
+            <label
+              htmlFor="password"
+              className="text-xs font-semibold text-slate-600"
+            >
+              Password
+            </label>
             <input
               type="password"
               id="password"
               name="password"
+              placeholder="Create a strong password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Enter your password"
               required
-              className="p-2 text-sm mt-1 rounded outline-0 focus:ring-3 ring-gray-300 transition-all duration-150 border border-black/10"
+              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border-1 border-black/10"
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="mt-5 bg-blue-600 text-white rounded w-full p-2 cursor-pointer hover:bg-blue-700 transition-all duration-150 text-sm"
+            className="w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
           >
-            {loading ? "Creating Account..." : "Register"}
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
+        </form>
 
-          {/* Login Link */}
-          <p className="mt-5 text-sm text-center">
-            Already have an account?
-            <Link to="/login" className="ml-1">
-              Login here
+        <div className="mt-5 text-center text-sm">
+          <p>
+            Already have an account?{" "}
+            <Link to="/login">
+              <span className="font-semibold text-blue-500">
+                Log in
+              </span>
             </Link>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );

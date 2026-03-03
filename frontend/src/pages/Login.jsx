@@ -4,15 +4,15 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
-
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+
   const { setUser } = useAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,7 +44,6 @@ export default function Login() {
         navigate("/dashboard");
       })
       .catch((err) => {
-
         toast.error(err.data.message, {
           position: "top-center",
           autoClose: 3000,
@@ -57,34 +56,55 @@ export default function Login() {
   };
 
   return (
-    <div>
-      <div className="p-8 w-110 mt-28 mx-auto ">
-        <form onSubmit={handleSubmit}>
-          <h1 className="text-center font-bold text-3xl mb-1">
-            Sign in Account
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="glass-card w-full max-w-md p-8 sm:p-10">
+        <div className="text-center">
+          <span className="chip">
+            Welcome Back
+          </span>
+          <h1 className="mt-4 text-2xl font-bold text-slate-900">
+            Login to easyinvoice
           </h1>
-          <p className="text-sm opacity-60 text-center mb-5">
-            Join easyinvoice and start managing invoices
+          <p className="mt-2 text-sm text-slate-500">
+            Please enter your details to continue.
           </p>
+        </div>
 
-          {/* Email Field */}
-          <div className="flex flex-col mt-2">
-            <label htmlFor="email">Email Address</label>
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-black/10" />
+          <span className="text-xs uppercase tracking-wider text-slate-400">
+            Login with email
+          </span>
+          <div className="h-px flex-1 bg-black/10" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="text-xs font-semibold text-slate-600"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               required
-              className="p-2 text-sm mt-1  rounded outline-0 focus:ring-3 ring-gray-300 transition-all duration-150 border border-black/10"
+              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10"
             />
           </div>
 
-          {/* Password Field */}
-          <div className="flex flex-col mt-2">
-            <label htmlFor="password">Password</label>
+          <div>
+            <label
+              htmlFor="password"
+              className="text-xs font-semibold text-slate-600"
+            >
+              Password
+            </label>
             <input
               type="password"
               id="password"
@@ -93,27 +113,29 @@ export default function Login() {
               onChange={handleChange}
               placeholder="Enter your password"
               required
-              className="p-2 text-sm mt-1 rounded outline-0 focus:ring-3 ring-gray-300 transition-all duration-150 border border-black/10"
+              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10"
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="mt-5 bg-blue-600 text-white rounded w-full p-2 cursor-pointer hover:bg-blue-700 transition-all duration-150 text-sm"
+            className="w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Log in"}
           </button>
+        </form>
 
-          {/* Login Link */}
-          <p className="mt-5 text-sm text-center">
-            Don't have an account?
-            <Link to="/register" className="ml-1">
-              Register here
+        <div className="mt-5 text-center text-sm">
+          <p>
+            Don't have an account?{" "}
+            <Link to="/register">
+              <span className="font-semibold text-blue-500">
+                Register
+              </span>
             </Link>
           </p>
-        </form>
+        </div>
       </div>
     </div>
   );

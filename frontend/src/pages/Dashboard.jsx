@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -15,7 +15,6 @@ export default function Dashboard() {
   const [modal, setModal] = useState(false);
   const { logout } = useAuth();
 
-  // Fetch invoices
   const fetchInvoices = async () => {
     setLoading(true);
     try {
@@ -31,16 +30,15 @@ export default function Dashboard() {
     fetchInvoices();
   }, []);
 
-  // Create or update invoice
   const handleSave = async (invoice) => {
     setLoading(true);
     try {
-      // Remove _id from each item if present
       const { _id, user, __v, ...invoiceWithoutIdUserV } = invoice;
       const cleanInvoice = {
         ...invoiceWithoutIdUserV,
         items: invoice.items.map(({ _id, ...rest }) => rest),
       };
+
       if (editInvoice) {
         await axios.put(`${API_URL}/${editInvoice._id}`, cleanInvoice, {
           withCredentials: true,
@@ -52,6 +50,7 @@ export default function Dashboard() {
         });
         toast.success("Invoice created successfully!");
       }
+
       fetchInvoices();
       setEditInvoice(null);
       setModal(false);
@@ -61,9 +60,9 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  // Delete invoice
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this invoice?")) return;
+
     setLoading(true);
     try {
       await axios.delete(`${API_URL}/${id}`, { withCredentials: true });
@@ -71,52 +70,69 @@ export default function Dashboard() {
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to delete invoice");
     }
+
     setLoading(false);
     fetchInvoices();
   };
 
-  // Modal for create/edit
   const openModal = (invoice = null) => {
     setEditInvoice(invoice);
     setModal(true);
   };
+
   const closeModal = () => {
     setEditInvoice(null);
     setModal(false);
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4">
-      <div className="flex items-center mb-6 justify-between">
-        <div>
-          <h2 className="font-bold text-3xl text-gray-800">
-        Invoices Dashboard
-      </h2>
-        </div>
-        <div>
-          <button onClick={logout} className="px-4 py-2 bg-red-600 text-sm rounded-lg text-white font-medium cursor-pointer hover:bg-red-700 transition-all">Logout</button>
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-white border-b border-black/5">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">
+              Invoices Dashboard
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Create, manage and track all your invoices
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => openModal()}
+              className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition"
+            >
+              Create Invoice
+            </button>
+
+            <button
+              onClick={logout}
+              className="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
-      <button
-        onClick={() => openModal()}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold mb-6 shadow"
-      >
-        Create Invoice
-      </button>
-      {loading ? (
-        <div className="flex justify-center my-4 mt-28">
-          <span className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
-        </div>
-      ) : (
-        <InvoiceList
-          invoices={invoices}
-          onEdit={openModal}
-          onDelete={handleDelete}
-        />
-      )}
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {loading ? (
+          <div className="flex justify-center items-center py-24">
+            <span className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+          </div>
+        ) : (
+          <InvoiceList
+            invoices={invoices}
+            onEdit={openModal}
+            onDelete={handleDelete}
+          />
+        )}
+      </div>
+
       {modal && (
-        <div className="fixed inset-0 backdrop-blur bg-opacity-30 z-50 flex items-center justify-center p-2 overflow-y-auto max-h-screen">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-4 sm:p-8 my-8">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6 sm:p-10">
             <InvoiceForm
               onSave={handleSave}
               onCancel={closeModal}
