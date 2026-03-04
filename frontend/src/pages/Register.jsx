@@ -153,7 +153,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
+            className="w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading? "Creating Account..." : "Create Account"}
           </button>
