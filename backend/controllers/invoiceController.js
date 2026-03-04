@@ -42,7 +42,6 @@ export const createInvoice = async (req, res) => {
       total,
     };
 
-
     const newInvoice = new Invoice(invoiceData);
 
     await newInvoice.save();
@@ -136,7 +135,9 @@ export const deleteInvoice = async (req, res) => {
     }
 
     if (invoice.user.toString() !== req.userId) {
-      return res.status(403).json({ message: "Unauthorized to delete this invoice" });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to delete this invoice" });
     }
 
     await Invoice.findByIdAndDelete(id);
@@ -155,13 +156,11 @@ export const downloadInvoice = async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
-    console.log(invoice);
-
     const html = generateInvoiceHTML(invoice);
 
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
@@ -169,20 +168,19 @@ export const downloadInvoice = async (req, res) => {
 
     const pdf = await page.pdf({
       format: "A4",
-      printBackground: true
+      printBackground: true,
     });
 
     await browser.close();
 
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=${invoice.invoiceNumber}.pdf`
+      "Content-Disposition": `attachment; filename=${invoice.invoiceNumber}.pdf`,
     });
 
     res.send(pdf);
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "PDF generation failed" });
   }
-}
+};
