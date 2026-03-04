@@ -42,9 +42,12 @@ export default function Register() {
           pauseOnHover: true,
         });
 
+        setLoading(false);
+
         navigate("/dashboard");
       })
       .catch((err) => {
+        setLoading(false);
         toast.error(err.response.data.message, {
           position: "top-center",
           autoClose: 3000,
@@ -52,8 +55,6 @@ export default function Register() {
           pauseOnHover: true,
         });
       });
-
-    setLoading(false);
   };
 
   return (
@@ -142,7 +143,7 @@ export default function Register() {
             disabled={loading}
             className="w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
