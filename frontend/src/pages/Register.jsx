@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,6 +22,10 @@ export default function Register() {
       ...prev,
       [name]: value,
     }));
+  };
+
+   const handleShowPassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -126,16 +131,23 @@ export default function Register() {
             >
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Create a strong password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border-1 border-black/10"
-            />
+            <div className="flex py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Create a Strong Password"
+                required
+                className="w-full outline-0"
+              />
+              {showPassword ? (
+                <div className="cursor-pointer" onClick={handleShowPassword}>Hide</div>
+              ) : (
+                <div className="cursor-pointer" onClick={handleShowPassword}>Show</div>
+              )}
+            </div>
           </div>
 
           <button

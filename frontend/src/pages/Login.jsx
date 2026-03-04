@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -20,6 +21,10 @@ export default function Login() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleShowPassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -41,6 +46,7 @@ export default function Login() {
           pauseOnHover: true,
         });
 
+        setFormData({ email: "", password: "" });
         setLoading(false);
         navigate("/dashboard");
       })
@@ -60,9 +66,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="glass-card w-full max-w-md p-8 sm:p-10">
         <div className="text-center">
-          <span className="chip">
-            Welcome Back
-          </span>
+          <span className="chip">Welcome Back</span>
           <h1 className="mt-4 text-2xl font-bold text-slate-900">
             Login to easyinvoice
           </h1>
@@ -106,16 +110,23 @@ export default function Login() {
             >
               Password
             </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              className="w-full py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10"
-            />
+            <div className="flex py-2 px-3 text-sm rounded-xl mt-2 outline-0 border border-black/10">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                required
+                className="w-full outline-0"
+              />
+              {showPassword ? (
+                <div className="cursor-pointer" onClick={handleShowPassword}>Hide</div>
+              ) : (
+                <div className="cursor-pointer" onClick={handleShowPassword}>Show</div>
+              )}
+            </div>
           </div>
 
           <button
@@ -123,7 +134,7 @@ export default function Login() {
             disabled={loading}
             className="w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
           >
-            {loading? "Logging in..." : "Log in"}
+            {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
@@ -131,9 +142,7 @@ export default function Login() {
           <p>
             Don't have an account?{" "}
             <Link to="/register">
-              <span className="font-semibold text-blue-500">
-                Register
-              </span>
+              <span className="font-semibold text-blue-500">Register</span>
             </Link>
           </p>
         </div>
