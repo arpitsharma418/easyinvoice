@@ -149,6 +149,8 @@ export const deleteInvoice = async (req, res) => {
 };
 
 export const downloadInvoice = async (req, res) => {
+  let browser;
+
   try {
     const invoice = await Invoice.findById(req.params.id);
 
@@ -156,40 +158,52 @@ export const downloadInvoice = async (req, res) => {
       return res.status(404).json({ message: "Invoice not found" });
     }
 
+    if (invoice.user.toString() !== req.userId) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to download this invoice" });
+    }
+
     const html = generateInvoiceHTML(invoice);
 
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
       headless: "new",
+      executablePath:
+        process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
-        "--disable-gpu"
-      ]
+        "--disable-gpu",
+      ],
     });
 
     const page = await browser.newPage();
 
     await page.setContent(html, {
-      waitUntil: "networkidle0"
+      waitUntil: "networkidle0",
     });
 
     const pdf = await page.pdf({
       format: "A4",
-      printBackground: true
+      printBackground: true,
     });
 
     await browser.close();
+    browser = null;
 
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=${invoice.invoiceNumber}.pdf`
+      "Content-Disposition": `attachment; filename=${invoice.invoiceNumber}.pdf`,
     });
 
     res.send(pdf);
-
   } catch (error) {
     console.error("Puppeteer PDF Error:", error);
     res.status(500).json({ message: "PDF generation failed" });
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 };

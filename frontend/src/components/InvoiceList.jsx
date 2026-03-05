@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -6,7 +6,7 @@ const API_URL = `${import.meta.env.VITE_API_URL}/api/invoices`;
 
 export default function InvoiceList({ invoices, onEdit, onDelete }) {
   const navigate = useNavigate();
-
+  const [downloading, setDownloading] = useState(false);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -19,31 +19,48 @@ export default function InvoiceList({ invoices, onEdit, onDelete }) {
     }
   };
 
-const handleDownloadInvoice = async (id) => {
-  try {
-    const response = await axios.get(`${API_URL}/${id}`, {
-      responseType: "blob",
-      withCredentials: true,
-    });
+  const handleDownloadInvoice = async (id) => {
+    setDownloading(true);
 
-    const url = window.URL.createObjectURL(
-      new Blob([response.data], { type: "application/pdf" })
-    );
+    try {
+      const response = await axios.get(`${API_URL}/${id}`, {
+        responseType: "blob",
+        withCredentials: true,
+      });
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Invoice.pdf";
-    document.body.appendChild(a);
-    a.click();
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: "application/pdf" }),
+      );
 
-    a.remove();
-    window.URL.revokeObjectURL(url);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Invoice.pdf";
+      document.body.appendChild(a);
+      a.click();
 
-  } catch (error) {
-    console.error(error);
-    alert("Download failed");
-  }
-};
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      let message = "Download failed";
+
+      if (error.response?.data instanceof Blob) {
+        try {
+          const errorText = await error.response.data.text();
+          const parsedError = JSON.parse(errorText);
+          message = parsedError.message || message;
+        } catch {
+          // Keep fallback message if response is not JSON
+        }
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+
+      console.error(error);
+      alert(message);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-black/10 p-6">
@@ -106,21 +123,21 @@ const handleDownloadInvoice = async (id) => {
                     <td className="text-right space-x-2">
                       <button
                         onClick={() => onEdit(inv)}
-                        className="text-xs px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                        className="text-xs px-5 py-2 rounded hover:bg-green-600 hover:text-white transition cursor-pointer border border-green-600 text-green-600"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => onDelete(inv._id)}
-                        className="text-xs px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+                        className="text-xs px-5 py-2 rounded hover:bg-red-600  hover:text-white transition cursor-pointer border border-red-600 text-red-600"
                       >
                         Delete
                       </button>
                       <button
                         onClick={() => handleDownloadInvoice(inv._id)}
-                        className="text-xs px-3 py-1 rounded-lg bg-slate-800 text-white hover:bg-black transition"
+                        className="text-xs px-5 py-2 rounded hover:bg-black hover:text-white transition cursor-pointer border border-black"
                       >
-                        Download
+                        {downloading ? "Downloading" : "Download"}
                       </button>
                     </td>
                   </tr>
@@ -172,21 +189,21 @@ const handleDownloadInvoice = async (id) => {
                 <div className="flex flex-wrap gap-2 mt-4">
                   <button
                     onClick={() => onEdit(inv)}
-                    className="flex-1 text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white"
+                    className="flex-1 text-xs px-5 py-2 rounded bg-green-600 text-white transition cursor-pointer"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => onDelete(inv._id)}
-                    className="flex-1 text-xs px-3 py-2 rounded-lg bg-red-600 text-white"
+                    className="flex-1 text-xs px-5 py-2 rounded bg-red-600 text-white transition cursor-pointer"
                   >
                     Delete
                   </button>
                   <button
                     onClick={() => handleDownloadInvoice(inv._id)}
-                    className="flex-1 text-xs px-3 py-2 rounded-lg bg-slate-800 text-white"
+                    className="flex-1 text-xs px-5 py-2 rounded bg-black text-white transition cursor-pointer"
                   >
-                    Download
+                    {downloading && inv._id ? "Downloading" : "Download"}
                   </button>
                 </div>
               </div>
