@@ -3,11 +3,19 @@ const app = express();
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
+
+if (!process.env.PUPPETEER_CACHE_DIR) {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  process.env.PUPPETEER_CACHE_DIR = path.join(__dirname, ".cache", "puppeteer");
+}
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
