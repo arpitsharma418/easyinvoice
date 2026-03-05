@@ -166,17 +166,32 @@ export const downloadInvoice = async (req, res) => {
 
     const html = generateInvoiceHTML(invoice);
 
-    browser = await puppeteer.launch({
+    const launchArgs = [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--single-process",
+      "--no-zygote",
+    ];
+
+    const primaryLaunchOptions = {
       headless: "new",
       executablePath:
         process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-      ],
-    });
+      args: launchArgs,
+    };
+
+    try {
+      browser = await puppeteer.launch(primaryLaunchOptions);
+    } catch (primaryError) {
+      // Fallback for environments where "new" headless or explicit path fails.
+      browser = await puppeteer.launch({
+        headless: true,
+        args: launchArgs,
+      });
+      console.warn("Puppeteer primary launch failed, fallback used:", primaryError.message);
+    }
 
     const page = await browser.newPage();
 
@@ -200,7 +215,10 @@ export const downloadInvoice = async (req, res) => {
     res.send(pdf);
   } catch (error) {
     console.error("Puppeteer PDF Error:", error);
-    res.status(500).json({ message: "PDF generation failed" });
+    res.status(500).json({
+      message: "PDF generation failed",
+      error: error.message,
+    });
   } finally {
     if (browser) {
       await browser.close();
