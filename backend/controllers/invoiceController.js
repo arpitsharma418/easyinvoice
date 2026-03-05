@@ -1,6 +1,9 @@
 import Invoice from "../models/Invoice.js";
 import puppeteer from "puppeteer";
 import generateInvoiceHTML from "../utils/generatePDF.js";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Calculate Invoice
 const calculateInvoice = (items, taxRate) => {
@@ -175,10 +178,17 @@ export const downloadInvoice = async (req, res) => {
       "--no-zygote",
     ];
 
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const backendRoot = path.resolve(__dirname, "..");
+    const bundledChromePath = findBundledChromePath(backendRoot);
+
     const primaryLaunchOptions = {
       headless: "new",
       executablePath:
-        process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+        process.env.PUPPETEER_EXECUTABLE_PATH ||
+        bundledChromePath ||
+        puppeteer.executablePath(),
       args: launchArgs,
     };
 
@@ -186,8 +196,14 @@ export const downloadInvoice = async (req, res) => {
       browser = await puppeteer.launch(primaryLaunchOptions);
     } catch (primaryError) {
       // Fallback for environments where "new" headless or explicit path fails.
+      const fallbackExecutablePath =
+        process.env.PUPPETEER_EXECUTABLE_PATH || bundledChromePath;
+
       browser = await puppeteer.launch({
         headless: true,
+        ...(fallbackExecutablePath
+          ? { executablePath: fallbackExecutablePath }
+          : {}),
         args: launchArgs,
       });
       console.warn("Puppeteer primary launch failed, fallback used:", primaryError.message);
@@ -225,3 +241,42 @@ export const downloadInvoice = async (req, res) => {
     }
   }
 };
+
+function findBundledChromePath(backendRoot) {
+  const chromeRoot = path.join(backendRoot, ".cache", "puppeteer", "chrome");
+  if (!fs.existsSync(chromeRoot)) return null;
+
+  const stack = [chromeRoot];
+  const candidates = [];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+
+      const normalized = fullPath.replace(/\\/g, "/");
+      if (
+        normalized.endsWith("/chrome-linux64/chrome") ||
+        normalized.endsWith("/chrome-win64/chrome.exe") ||
+        normalized.endsWith("/chrome-mac/Chromium.app/Contents/MacOS/Chromium")
+      ) {
+        candidates.push(fullPath);
+      }
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  // Pick the most recently modified downloaded browser.
+  candidates.sort(
+    (a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs,
+  );
+
+  return candidates[0];
+}
