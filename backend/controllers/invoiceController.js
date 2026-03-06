@@ -59,17 +59,42 @@ export const createInvoice = async (req, res) => {
 export const getAllInvoices = async (req, res) => {
   try {
     const id = req.userId;
+    const parsedPage = Number.parseInt(req.query.page, 10);
+    const parsedLimit = Number.parseInt(req.query.limit, 10);
 
-    const invoices = await Invoice.find({ user: id });
+    const page = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+    const limit =
+      Number.isNaN(parsedLimit) || parsedLimit < 1
+        ? 10
+        : Math.min(parsedLimit, 100);
 
-    if (!invoices || invoices.length === 0) {
-      return res.status(404).json({ message: "No invoices found" });
-    }
+    const filter = { user: id };
+    const totalInvoices = await Invoice.countDocuments(filter);
+    const totalPages = Math.max(1, Math.ceil(totalInvoices / limit));
+    const currentPage =
+      totalInvoices === 0 ? 1 : Math.min(page, totalPages);
+    const skip = (currentPage - 1) * limit;
+
+    const invoices = await Invoice.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const startInvoice = totalInvoices === 0 ? 0 : skip + 1;
+    const endInvoice = totalInvoices === 0 ? 0 : skip + invoices.length;
 
     return res.status(200).json({
       message: "Fetched All Invoices",
       data: invoices,
-      totalInvoices: invoices.length,
+      pagination: {
+        currentPage,
+        totalPages,
+        totalInvoices,
+        limit,
+        startInvoice,
+        endInvoice,
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: "Server Error" });
@@ -152,8 +177,6 @@ export const deleteInvoice = async (req, res) => {
 };
 
 export const downloadInvoice = async (req, res) => {
-  let browser;
-
   try {
     const invoice = await Invoice.findById(req.params.id);
 
@@ -169,59 +192,12 @@ export const downloadInvoice = async (req, res) => {
 
     const html = generateInvoiceHTML(invoice);
 
-    const launchArgs = [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--single-process",
-      "--no-zygote",
-    ];
-
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const backendRoot = path.resolve(__dirname, "..");
-    const bundledChromePath = findBundledChromePath(backendRoot);
+    const executablePath = resolveChromeExecutablePath(backendRoot);
 
-    const primaryLaunchOptions = {
-      headless: "new",
-      executablePath:
-        process.env.PUPPETEER_EXECUTABLE_PATH ||
-        bundledChromePath ||
-        puppeteer.executablePath(),
-      args: launchArgs,
-    };
-
-    try {
-      browser = await puppeteer.launch(primaryLaunchOptions);
-    } catch (primaryError) {
-      // Fallback for environments where "new" headless or explicit path fails.
-      const fallbackExecutablePath =
-        process.env.PUPPETEER_EXECUTABLE_PATH || bundledChromePath;
-
-      browser = await puppeteer.launch({
-        headless: true,
-        ...(fallbackExecutablePath
-          ? { executablePath: fallbackExecutablePath }
-          : {}),
-        args: launchArgs,
-      });
-      console.warn("Puppeteer primary launch failed, fallback used:", primaryError.message);
-    }
-
-    const page = await browser.newPage();
-
-    await page.setContent(html, {
-      waitUntil: "networkidle0",
-    });
-
-    const pdf = await page.pdf({
-      format: "A4",
-      printBackground: true,
-    });
-
-    await browser.close();
-    browser = null;
+    const pdf = await generatePdfWithLaunchFallback(html, executablePath);
 
     res.set({
       "Content-Type": "application/pdf",
@@ -235,12 +211,107 @@ export const downloadInvoice = async (req, res) => {
       message: "PDF generation failed",
       error: error.message,
     });
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 };
+
+async function generatePdfWithLaunchFallback(html, executablePath) {
+  const launchOptions = getLaunchOptions(executablePath);
+  let lastError = null;
+
+  for (const options of launchOptions) {
+    let browser = null;
+
+    try {
+      browser = await puppeteer.launch(options);
+      const pdf = await renderPdf(browser, html);
+      await browser.close();
+      return pdf;
+    } catch (error) {
+      lastError = error;
+      if (browser) await browser.close().catch(() => {});
+    }
+  }
+
+  throw lastError || new Error("Unable to launch browser for PDF generation");
+}
+
+async function renderPdf(browser, html) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const page = await browser.newPage();
+
+    try {
+      await page.setContent(html, {
+        waitUntil: "networkidle0",
+        timeout: 45000,
+      });
+      await page.emulateMediaType("screen");
+      await page.evaluate(() => document.fonts?.ready ?? Promise.resolve());
+
+      const pdf = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        preferCSSPageSize: true,
+      });
+
+      await page.close();
+      return pdf;
+    } catch (error) {
+      lastError = error;
+      await page.close().catch(() => {});
+
+      if (!isTargetClosedError(error) || attempt === 2) {
+        break;
+      }
+    }
+  }
+
+  throw lastError || new Error("PDF rendering failed");
+}
+
+function getLaunchOptions(executablePath) {
+  const args = ["--disable-dev-shm-usage", "--disable-gpu"];
+
+  if (process.platform === "linux") {
+    args.push("--no-sandbox", "--disable-setuid-sandbox");
+  }
+
+  const options = [
+    {
+      headless: "new",
+      args,
+      protocolTimeout: 60000,
+      ...(executablePath ? { executablePath } : {}),
+    },
+    {
+      headless: true,
+      args,
+      protocolTimeout: 60000,
+      ...(executablePath ? { executablePath } : {}),
+    },
+    {
+      headless: true,
+      args,
+      protocolTimeout: 60000,
+    },
+  ];
+
+  return options;
+}
+
+function isTargetClosedError(error) {
+  const message = `${error?.name || ""} ${error?.message || ""}`.toLowerCase();
+  return message.includes("target closed");
+}
+
+function resolveChromeExecutablePath(backendRoot) {
+  return (
+    process.env.PUPPETEER_EXECUTABLE_PATH ||
+    findBundledChromePath(backendRoot) ||
+    null
+  );
+}
 
 function findBundledChromePath(backendRoot) {
   const chromeRoot = path.join(backendRoot, ".cache", "puppeteer", "chrome");

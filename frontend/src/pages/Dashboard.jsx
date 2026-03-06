@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -7,19 +7,35 @@ import InvoiceList from "../components/InvoiceList.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/invoices`;
+const PAGE_LIMIT = 10;
 
 export default function Dashboard() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editInvoice, setEditInvoice] = useState(null);
   const [modal, setModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalInvoices: 0,
+    limit: PAGE_LIMIT,
+    startInvoice: 0,
+    endInvoice: 0,
+  });
   const { logout } = useAuth();
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await axios.get(API_URL, { withCredentials: true });
+      const res = await axios.get(API_URL, {
+        withCredentials: true,
+        params: { page, limit: PAGE_LIMIT },
+      });
       setInvoices(res.data.data || []);
+      const apiPagination = res.data.pagination;
+      setPagination(apiPagination);
+      setCurrentPage(apiPagination?.currentPage || page);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to fetch invoices");
     }
@@ -27,16 +43,25 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchInvoices();
-  }, []);
+    fetchInvoices(currentPage);
+  }, [currentPage]);
 
   const handleSave = async (invoice) => {
     setLoading(true);
     try {
-      const { _id, user, __v, ...invoiceWithoutIdUserV } = invoice;
+      const {
+        _id: _INVOICE_ID,
+        user: _USER,
+        __v: _VERSION,
+        ...invoiceWithoutIdUserV
+      } = invoice;
       const cleanInvoice = {
         ...invoiceWithoutIdUserV,
-        items: invoice.items.map(({ _id, ...rest }) => rest),
+        items: invoice.items.map((item) => {
+          const normalizedItem = { ...item };
+          delete normalizedItem._id;
+          return normalizedItem;
+        }),
       };
 
       if (editInvoice) {
@@ -44,14 +69,19 @@ export default function Dashboard() {
           withCredentials: true,
         });
         toast.success("Invoice updated successfully!");
+        fetchInvoices(currentPage);
       } else {
         await axios.post(API_URL, cleanInvoice, {
           withCredentials: true,
         });
         toast.success("Invoice created successfully!");
+        if (currentPage === 1) {
+          fetchInvoices(1);
+        } else {
+          setCurrentPage(1);
+        }
       }
 
-      fetchInvoices();
       setEditInvoice(null);
       setModal(false);
     } catch (err) {
@@ -72,7 +102,7 @@ export default function Dashboard() {
     }
 
     setLoading(false);
-    fetchInvoices();
+    fetchInvoices(currentPage);
   };
 
   const openModal = (invoice = null) => {
@@ -126,6 +156,8 @@ export default function Dashboard() {
             invoices={invoices}
             onEdit={openModal}
             onDelete={handleDelete}
+            pagination={pagination}
+            onPageChange={setCurrentPage}
           />
         )}
       </div>

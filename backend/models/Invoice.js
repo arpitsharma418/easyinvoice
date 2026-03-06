@@ -69,6 +69,8 @@ const invoiceSchema = new mongoose.Schema({
   },
 });
 
+invoiceSchema.index({ user: 1, createdAt: -1 });
+
 // Create Invoice model from schema
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 

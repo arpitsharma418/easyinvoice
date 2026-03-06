@@ -1,21 +1,17 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext} from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-// Create the AuthContext
 const AuthContext = createContext();
 
-// AuthProvider component to wrap the app
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    return JSON.parse(localStorage.getItem("user")) || null;
+  });
   const navigate = useNavigate();
 
-  useEffect(() => {
-      setUser(JSON.parse(localStorage.getItem("user")) || null);
-  }, []);
-
-  // Logout function
   const logout = () => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/auth/logout`, {

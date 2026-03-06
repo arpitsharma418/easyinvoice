@@ -2,39 +2,41 @@ import React, { useState, useEffect } from "react";
 
 export default function InvoiceForm({ onSave, onCancel, initialData }) {
   const [invoice, setInvoice] = useState(
-    initialData || {
-      invoiceNumber: `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
-      invoiceDate: new Date().toISOString().slice(0, 10),
-      dueDate: "",
-      fromBusiness: { name: "", email: "", phone: "", address: "" },
-      toBusiness: { name: "", email: "", phone: "", address: "" },
-      taxRate: 0,
-      items: [{ description: "", quantity: 1, unitPrice: 0 }],
-      notes: "",
-      status: "draft",
-      subtotal: 0,
-      taxAmount: 0,
-      total: 0,
-    }
+    () =>
+      initialData || {
+        invoiceNumber: `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`,
+        invoiceDate: new Date().toISOString().slice(0, 10),
+        dueDate: "",
+        fromBusiness: { name: "", email: "", phone: "", address: "" },
+        toBusiness: { name: "", email: "", phone: "", address: "" },
+        taxRate: 0,
+        items: [{ description: "", quantity: 1, unitPrice: 0 }],
+        notes: "",
+        status: "draft",
+        subtotal: 0,
+        taxAmount: 0,
+        total: 0,
+      },
   );
 
-  useEffect(() => {
-    const subtotal = invoice.items.reduce(
-      (sum, item) =>
-        sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
-      0
-    );
+  const subtotal = invoice.items.reduce(
+    (sum, item) =>
+      sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
+    0,
+  );
 
-    const taxAmount = (subtotal * Number(invoice.taxRate || 0)) / 100;
-    const total = subtotal + taxAmount;
+  const taxAmount = (subtotal * Number(invoice.taxRate || 0)) / 100;
+  const total = subtotal + taxAmount;
 
-    setInvoice((prev) => ({
-      ...prev,
-      subtotal,
-      taxAmount,
-      total,
-    }));
-  }, [invoice.items, invoice.taxRate]);
+  // useEffect(() => {
+
+  //   setInvoice((prev) => ({
+  //     ...prev,
+  //     subtotal,
+  //     taxAmount,
+  //     total,
+  //   }));
+  // }, [invoice.items, invoice.taxRate]);
 
   const handleChange = (e) => {
     setInvoice({ ...invoice, [e.target.name]: e.target.value });
@@ -49,7 +51,7 @@ export default function InvoiceForm({ onSave, onCancel, initialData }) {
 
   const handleItemChange = (idx, e) => {
     const items = invoice.items.map((item, i) =>
-      i === idx ? { ...item, [e.target.name]: e.target.value } : item
+      i === idx ? { ...item, [e.target.name]: e.target.value } : item,
     );
     setInvoice({ ...invoice, items });
   };
@@ -94,9 +96,28 @@ export default function InvoiceForm({ onSave, onCancel, initialData }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Input label="Invoice Number" name="invoiceNumber" value={invoice.invoiceNumber} onChange={handleChange} required />
-        <Input type="date" label="Invoice Date" name="invoiceDate" value={invoice.invoiceDate} onChange={handleChange} />
-        <Input type="date" label="Due Date" name="dueDate" value={invoice.dueDate} onChange={handleChange} required />
+        <Input
+          label="Invoice Number"
+          name="invoiceNumber"
+          value={invoice.invoiceNumber}
+          onChange={handleChange}
+          required
+        />
+        <Input
+          type="date"
+          label="Invoice Date"
+          name="invoiceDate"
+          value={invoice.invoiceDate}
+          onChange={handleChange}
+        />
+        <Input
+          type="date"
+          label="Due Date"
+          name="dueDate"
+          value={invoice.dueDate}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -181,7 +202,9 @@ export default function InvoiceForm({ onSave, onCancel, initialData }) {
       <div className="text-right space-y-2">
         <p>Subtotal: ₹ {invoice.subtotal.toFixed(2)}</p>
         <p>Tax: ₹ {invoice.taxAmount.toFixed(2)}</p>
-        <p className="font-bold text-lg">Total: &#8377; {invoice.total.toFixed(2)}</p>
+        <p className="font-bold text-lg">
+          Total: &#8377; {invoice.total.toFixed(2)}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
