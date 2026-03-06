@@ -1,3 +1,4 @@
+import { useState } from "react";
 import axios from "axios";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/invoices`;
@@ -9,6 +10,8 @@ export default function InvoiceList({
   pagination,
   onPageChange,
 }) {
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState(null);
+
   const getStatusStyle = (status) => {
     switch (status) {
       case "paid":
@@ -21,6 +24,8 @@ export default function InvoiceList({
   };
 
   const handleDownloadInvoice = async (id) => {
+    setDownloadingInvoiceId(id);
+
     try {
       const response = await axios.get(`${API_URL}/${id}`, {
         responseType: "blob",
@@ -56,6 +61,8 @@ export default function InvoiceList({
 
       console.error(error);
       alert(message);
+    } finally {
+      setDownloadingInvoiceId((current) => (current === id ? null : current));
     }
   };
 
@@ -155,9 +162,12 @@ export default function InvoiceList({
                       </button>
                       <button
                         onClick={() => handleDownloadInvoice(inv._id)}
-                        className="text-white px-4 py-2 bg-black rounded-lg text-xs cursor-pointer hover:bg-black/80 transition-all"
+                        disabled={downloadingInvoiceId === inv._id}
+                        className="text-white px-4 py-2 bg-black rounded-lg text-xs cursor-pointer hover:bg-black/80 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        Download
+                        {downloadingInvoiceId === inv._id
+                          ? "Downloading..."
+                          : "Download"}
                       </button>
                     </td>
                   </tr>
@@ -221,9 +231,12 @@ export default function InvoiceList({
                   </button>
                   <button
                     onClick={() => handleDownloadInvoice(inv._id)}
-                    className="flex-1 text-white px-4 py-2 bg-black rounded-lg text-xs cursor-pointer hover:bg-black/80 transition-all"
+                    disabled={downloadingInvoiceId === inv._id}
+                    className="flex-1 text-white px-4 py-2 bg-black rounded-lg text-xs cursor-pointer hover:bg-black/80 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Download
+                    {downloadingInvoiceId === inv._id
+                      ? "Downloading..."
+                      : "Download"}
                   </button>
                 </div>
               </div>
