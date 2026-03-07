@@ -16,15 +16,9 @@
 
   body {
     font-family: "TASA Orbiter", sans-serif;
-    font-optical-sizing: auto;
     font-weight: 400;
-    font-style: normal;
-    color: var(--ink-900);
-    background:
-      radial-gradient(1100px 480px at 95% -10%, #bfdbfe 0%, transparent 90%),
-      radial-gradient(900px 500px at -10% 10%, #dbeafe 0%, transparent 52%),
-      var(--surface-muted);
     min-height: 100vh;
+    scroll-behavior: smooth;
   }
 
   #root {
