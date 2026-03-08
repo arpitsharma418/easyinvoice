@@ -15,7 +15,7 @@ const invoiceItems = [
 
 export default function Hero() {
   return (
-    <section className="mt-20 p-10 text-center sm:text-start">
+    <section className="mt-12 p-10 text-center sm:text-start">
 
       <h1 className="text-center text-xs opacity-80 border border-black/20 w-fit mx-auto px-2 py-1 rounded-full text-red-600 bg-white mb-5">Backend may take ~60s to wake (Render free tier).</h1>
 

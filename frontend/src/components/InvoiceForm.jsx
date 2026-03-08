@@ -28,15 +28,15 @@ export default function InvoiceForm({ onSave, onCancel, initialData }) {
   const taxAmount = (subtotal * Number(invoice.taxRate || 0)) / 100;
   const total = subtotal + taxAmount;
 
-  // useEffect(() => {
+  useEffect(() => {
 
-  //   setInvoice((prev) => ({
-  //     ...prev,
-  //     subtotal,
-  //     taxAmount,
-  //     total,
-  //   }));
-  // }, [invoice.items, invoice.taxRate]);
+    setInvoice((prev) => ({
+      ...prev,
+      subtotal,
+      taxAmount,
+      total,
+    }));
+  }, [invoice.items, invoice.taxRate]);
 
   const handleChange = (e) => {
     setInvoice({ ...invoice, [e.target.name]: e.target.value });
